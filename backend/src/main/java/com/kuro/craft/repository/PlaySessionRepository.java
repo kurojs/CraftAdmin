@@ -1,5 +1,6 @@
 package com.kuro.craft.repository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,5 +18,7 @@ public interface PlaySessionRepository extends JpaRepository<PlaySession, Long> 
   List<PlaySession> findByLeftAtIsNull();
 
   Page<PlaySession> findByPlayerOrderByJoinedAtDesc(Player player, Pageable pageable);
+
+  List<PlaySession> findByJoinedAtAfter(Instant since);
 
 }
