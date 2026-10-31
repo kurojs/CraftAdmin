@@ -3,7 +3,9 @@ package com.kuro.craft.service;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -11,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.kuro.craft.dto.EventDto;
 import com.kuro.craft.dto.IncomingEventDto;
+import com.kuro.craft.dto.OnlinePlayerDto;
 import com.kuro.craft.model.GameEvent;
 import com.kuro.craft.model.PlaySession;
 import com.kuro.craft.model.Player;
@@ -59,6 +62,53 @@ public class IngestService {
     for (Player player : playerRepository.findByOnlineTrue()) {
       player.setOnline(false);
       playerRepository.save(player);
+    }
+  }
+
+  @Transactional
+  public void sync(List<OnlinePlayerDto> online) {
+    Instant now = Instant.now();
+    Set<UUID> onlineIds = new HashSet<>();
+
+    if (online != null) {
+      for (OnlinePlayerDto dto : online) {
+        if (dto == null || dto.uuid() == null) {
+          continue;
+        }
+
+        onlineIds.add(dto.uuid());
+
+        Player player = playerRepository.findById(dto.uuid())
+            .orElseGet(() -> {
+              Player created = new Player();
+              created.setUuid(dto.uuid());
+              created.setFirstSeen(now);
+              return created;
+            });
+
+        if (dto.name() != null) {
+          player.setName(dto.name());
+        }
+        player.setOnline(true);
+        player.setLastSeen(now);
+        playerRepository.save(player);
+
+        if (playSessionRepository.findFirstByPlayerAndLeftAtIsNullOrderByJoinedAtDesc(player).isEmpty()) {
+          PlaySession session = new PlaySession();
+          session.setPlayer(player);
+          session.setJoinedAt(now);
+          playSessionRepository.save(session);
+        }
+      }
+    }
+
+    for (Player player : playerRepository.findByOnlineTrue()) {
+      if (!onlineIds.contains(player.getUuid())) {
+        playSessionRepository.findFirstByPlayerAndLeftAtIsNullOrderByJoinedAtDesc(player)
+            .ifPresent(session -> closeSession(session, now));
+        player.setOnline(false);
+        playerRepository.save(player);
+      }
     }
   }
 
