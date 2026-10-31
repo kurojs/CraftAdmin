@@ -60,7 +60,7 @@ public class ActionService {
 
     if (lower.startsWith("stop") || lower.startsWith("op") || lower.startsWith("deop")
         || lower.startsWith("whitelist off")) {
-      throw new IllegalArgumentException("Comando no permitido");
+      throw new IllegalArgumentException("Command not allowed");
     }
 
     return execute(admin, "RAW", null, command);

@@ -58,7 +58,7 @@ public class PlayerService {
 
   private Player find(UUID uuid) {
     return playerRepository.findById(uuid)
-        .orElseThrow(() -> new NotFoundException("Jugador no encontrado"));
+        .orElseThrow(() -> new NotFoundException("Player not found"));
   }
 
   private int pageSize(int size) {

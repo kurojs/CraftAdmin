@@ -21,7 +21,7 @@ public class SkinService {
 
   public byte[] getSkin(String name) {
     if (name == null || !VALID_NAME.matcher(name).matches()) {
-      throw new NotFoundException("Skin no encontrada");
+      throw new NotFoundException("Skin not found");
     }
 
     CachedSkin cached = cache.get(name);
@@ -36,7 +36,7 @@ public class SkinService {
           .body(byte[].class);
 
       if (data == null || data.length == 0) {
-        throw new NotFoundException("Skin no encontrada");
+        throw new NotFoundException("Skin not found");
       }
 
       cache.put(name, new CachedSkin(data, Instant.now()));
@@ -44,7 +44,7 @@ public class SkinService {
     } catch (NotFoundException ex) {
       throw ex;
     } catch (Exception ex) {
-      throw new NotFoundException("Skin no encontrada");
+      throw new NotFoundException("Skin not found");
     }
   }
 

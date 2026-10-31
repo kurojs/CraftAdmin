@@ -30,7 +30,7 @@ public class AdminController {
   @PostMapping
   public ResponseEntity<Void> create(@Valid @RequestBody CreateAdminRequest request) {
     if (adminUserRepository.findByUsername(request.username()).isPresent()) {
-      throw new ConflictException("El usuario ya existe");
+      throw new ConflictException("Username already exists");
     }
 
     AdminUser admin = new AdminUser();

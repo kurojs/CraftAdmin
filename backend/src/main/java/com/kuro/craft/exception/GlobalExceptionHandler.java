@@ -32,6 +32,6 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ErrorDto> handleAllUncaughtException(Exception ex) {
-    return ResponseEntity.status(500).body(ErrorDto.from(500, "Ocurrió un error interno en el servidor."));
+    return ResponseEntity.status(500).body(ErrorDto.from(500, "Internal server error."));
   }
 }

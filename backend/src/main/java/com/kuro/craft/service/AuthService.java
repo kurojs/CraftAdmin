@@ -28,7 +28,7 @@ public class AuthService {
     AdminUser admin = adminUserRepository.findByUsername(request.username())
         .filter(AdminUser::isActive)
         .filter(candidate -> passwordEncoder.matches(request.password(), candidate.getPasswordHash()))
-        .orElseThrow(() -> new UnauthorizedException("Credenciales inválidas"));
+        .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
 
     String token = jwtService.createToken(admin.getUsername(), admin.getRole());
     return new LoginResponse(token, admin.getUsername(), admin.getRole());

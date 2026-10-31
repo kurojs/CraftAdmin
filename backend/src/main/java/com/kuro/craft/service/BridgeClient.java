@@ -37,12 +37,12 @@ public class BridgeClient {
           .body(BridgeResponse.class);
 
       if (response == null) {
-        return new CommandResult(false, "Puente no disponible");
+        return new CommandResult(false, "Bridge unavailable");
       }
 
       return new CommandResult(response.ok(), response.response());
     } catch (Exception ex) {
-      return new CommandResult(false, "Puente no disponible");
+      return new CommandResult(false, "Bridge unavailable");
     }
   }
 
