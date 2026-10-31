@@ -4,8 +4,9 @@ Backend API for a Minecraft server admin panel. It stores what happens on the se
 leaves, chat, deaths, advancements), tracks play sessions, serves player skins, streams live
 events and runs moderation commands through a local bridge process.
 
-This repository currently ships the backend. The panel also has a React frontend and a Node.js
-bridge process that reads the server log and executes RCON commands.
+The backend is implemented. The other two programs of the panel, a Node.js bridge that reads
+the server log and executes RCON commands and a React frontend, are scaffolded with their
+dependencies installed and their file structure in place.
 
 ## Stack
 
