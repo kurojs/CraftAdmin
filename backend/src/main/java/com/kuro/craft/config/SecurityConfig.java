@@ -1,5 +1,6 @@
 package com.kuro.craft.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -12,6 +13,7 @@ import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 
+import com.kuro.craft.security.ApiKeyFilter;
 import com.kuro.craft.security.JwtFilter;
 import com.kuro.craft.security.JwtService;
 
@@ -19,7 +21,8 @@ import com.kuro.craft.security.JwtService;
 public class SecurityConfig {
 
   @Bean
-  SecurityFilterChain securityFilterChain(HttpSecurity http, JwtService jwtService) throws Exception {
+  SecurityFilterChain securityFilterChain(HttpSecurity http, JwtService jwtService,
+      @Value("${app.bridge.api-key}") String apiKey) throws Exception {
     PathPatternRequestMatcher.Builder patterns = PathPatternRequestMatcher.withDefaults();
 
     return http
@@ -35,9 +38,11 @@ public class SecurityConfig {
             .requestMatchers(patterns.matcher(HttpMethod.GET, "/api/audit")).hasRole("ADMIN")
             .requestMatchers(patterns.matcher(HttpMethod.POST, "/api/admins")).hasRole("ADMIN")
             .requestMatchers(patterns.matcher(HttpMethod.POST, "/api/actions/**")).hasAnyRole("MODERATOR", "ADMIN")
+            .requestMatchers(patterns.matcher("/api/bridge/**")).hasRole("BRIDGE")
             .requestMatchers(patterns.matcher(HttpMethod.GET, "/api/**")).hasAnyRole("VIEWER", "MODERATOR", "ADMIN")
             .anyRequest().denyAll())
         .addFilterBefore(new JwtFilter(jwtService), UsernamePasswordAuthenticationFilter.class)
+        .addFilterAfter(new ApiKeyFilter(apiKey), JwtFilter.class)
         .build();
   }
 }
