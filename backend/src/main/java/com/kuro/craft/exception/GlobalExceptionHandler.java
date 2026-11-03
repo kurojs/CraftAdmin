@@ -25,8 +25,18 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(409).body(ErrorDto.from(409, ex.getMessage()));
   }
 
-  @ExceptionHandler({ MethodArgumentNotValidException.class, IllegalArgumentException.class })
-  public ResponseEntity<ErrorDto> handleBadRequestException(Exception ex) {
+  @ExceptionHandler(MethodArgumentNotValidException.class)
+  public ResponseEntity<ErrorDto> handleValidationException(MethodArgumentNotValidException ex) {
+    String message = ex.getBindingResult().getFieldErrors().stream()
+        .findFirst()
+        .map(error -> error.getField() + " " + error.getDefaultMessage())
+        .orElse("Invalid request");
+
+    return ResponseEntity.status(400).body(ErrorDto.from(400, message));
+  }
+
+  @ExceptionHandler(IllegalArgumentException.class)
+  public ResponseEntity<ErrorDto> handleIllegalArgumentException(IllegalArgumentException ex) {
     return ResponseEntity.status(400).body(ErrorDto.from(400, ex.getMessage()));
   }
 
