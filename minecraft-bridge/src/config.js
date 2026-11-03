@@ -17,13 +17,13 @@ if (missing.length > 0) {
 }
 
 export const config = {
-  SPRING_URL: process.env.SPRING_URL,
-  API_KEY: process.env.API_KEY,
-  LOG_PATH: process.env.LOG_PATH,
-  MC_HOST: process.env.MC_HOST,
-  MC_PORT: Number(process.env.MC_PORT),
-  RCON_HOST: process.env.RCON_HOST,
-  RCON_PORT: Number(process.env.RCON_PORT),
-  RCON_PASSWORD: process.env.RCON_PASSWORD,
-  BRIDGE_PORT: Number(process.env.BRIDGE_PORT),
+  springUrl: process.env.SPRING_URL,
+  apiKey: process.env.API_KEY,
+  logPath: process.env.LOG_PATH,
+  mcHost: process.env.MC_HOST,
+  mcPort: Number(process.env.MC_PORT),
+  rconHost: process.env.RCON_HOST,
+  rconPort: Number(process.env.RCON_PORT),
+  rconPassword: process.env.RCON_PASSWORD,
+  bridgePort: Number(process.env.BRIDGE_PORT),
 };

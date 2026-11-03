@@ -3,8 +3,8 @@
 Node.js process that reads the Minecraft server log, forwards what happens to the
 CraftAdmin backend, and executes RCON commands on request.
 
-The project is scaffolded: dependencies are installed, configuration is wired and the
-entry point starts. The modules below are empty on purpose, ready to be implemented.
+The bridge is implemented: it parses the log, batches events to the backend, reports the
+server status, syncs the roster on startup and executes RCON commands on request.
 
 ## Requirements
 
@@ -39,16 +39,20 @@ npm test    # runs the node:test suite
 | `src/config.js` | Environment loading and validation |
 | `src/index.js` | Entry point and pipeline wiring |
 | `src/parsers.js` | `parseLine(line)` turns a log line into an event object |
-| `src/logWatcher.js` | `watchLog(path, onLine)` follows the log file |
-| `src/apiClient.js` | Backend calls: events, status and sync |
+| `src/logWatcher.js` | `watchLogFile(path, onLine)` follows the log file |
+| `src/apiClient.js` | Backend calls: `sendEvents`, `sendStatus` and `sendSync` |
 | `src/statusPoller.js` | `getStatus()` pings the server for its state and roster |
-| `src/rconClient.js` | `runCommand(cmd)` keeps the RCON connection |
+| `src/rconClient.js` | `sendRconCommand(cmd)` keeps the RCON connection |
 | `src/server.js` | Fastify server exposing `POST /cmd` |
 | `test/parsers.test.js` | Parser tests |
 
-## Next steps
+## Behaviour
 
-1. Parse log lines and test them.
-2. Watch the log, buffer events and post them to the backend.
-3. Report server status and sync the roster on startup.
-4. Expose `POST /cmd` over RCON.
+- Log lines are parsed into events and buffered for one second; the batch is posted to
+  `/api/bridge/events` and put back in the buffer if the backend is unreachable.
+- A `UUID` line and the matching `LOGIN` line are kept in memory so the `JOIN` event
+  carries the player UUID and coordinates.
+- The server status is reported every five seconds, and the roster is synced once on
+  startup so players left online by a crash are reconciled.
+- `POST /cmd` requires `X-API-Key`, rejects multi-line input and only runs the commands
+  in its allow list.
