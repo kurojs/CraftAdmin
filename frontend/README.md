@@ -1,8 +1,7 @@
 # frontend
 
-React panel for CraftAdmin. The project is scaffolded with Vite, React, TypeScript and
-Tailwind, dependencies are installed and the dev server proxies `/api` to the backend.
-The files below are empty on purpose, ready to be implemented.
+React panel for CraftAdmin. It is implemented: Vite, React, TypeScript and Tailwind, with
+the dev server proxying `/api` to the backend.
 
 ## Scripts
 
@@ -22,9 +21,11 @@ npm run lint     # oxlint
 
 | File | Purpose |
 |---|---|
-| `src/api/client.ts` | Axios instance with the token interceptor and the 401 redirect |
+| `src/api/client.ts` | Axios instance with the token interceptor and the 401 handling |
 | `src/api/types.ts` | TypeScript types mirroring the backend DTOs |
+| `src/context/auth.ts` | Auth context and session types |
 | `src/context/AuthContext.tsx` | Session state, `login` and `logout` |
+| `src/hooks/useAuth.ts` | Reads the auth context |
 | `src/pages/Login.tsx` | Login form |
 | `src/pages/Dashboard.tsx` | Server status, online players, live feed and chart |
 | `src/pages/Players.tsx` | Player list with search, filter, sort and pagination |
@@ -41,13 +42,18 @@ npm run lint     # oxlint
 | `src/components/ActivityChart.tsx` | Recharts activity chart |
 | `src/hooks/` | One query or live-event hook per screen |
 | `src/utils/format.ts` | Relative time and duration formatting |
+| `src/utils/errors.ts` | Reads the backend error message |
 
-`src/App.tsx` and `src/main.tsx` are still the Vite template and are replaced when the
-routing and session wiring are implemented.
+## Session
 
-## Next steps
+The token, the username and the role live in `sessionStorage`, so closing the tab ends the
+session. Every request sends `Authorization: Bearer <token>`; a `401` clears the session and
+returns to `/login`.
 
-1. HTTP client, session context and protected routing.
-2. Dashboard with server status, online players and the live feed.
-3. Player list, event history and player profile with the 3D skin.
-4. Moderation actions, console, audit and the activity chart.
+Live events arrive over `GET /api/events/stream` (server-sent events) and refresh the
+dashboard queries when a `game-event` message is received.
+
+## Roles
+
+`ADMIN` sees every screen. `MODERATOR` sees the dashboard, players, events and the moderation
+buttons, but not the console or the audit log. `VIEWER` is read-only.
