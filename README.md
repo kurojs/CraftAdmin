@@ -81,6 +81,18 @@ development only.
 | `BRIDGE_API_KEY` | `dev-bridge-key` | Shared key required by `/api/bridge/**` |
 | `BRIDGE_URL` | `http://127.0.0.1:4001` | Base URL of the bridge command endpoint |
 
+## Security
+
+The defaults in this repository are for local development only. Before exposing the panel
+outside your machine, change at least:
+
+- `ADMIN_PASSWORD`: the seeded `admin` / `admin1234` is public knowledge.
+- `BRIDGE_API_KEY`: the key travels as a plain header, so it must not stay at its default.
+- `JWT_SECRET`: the fallback secret is in the source and is only meant for development.
+
+The panel speaks plain HTTP and keeps the token in `sessionStorage`. Put it behind a TLS
+reverse proxy and keep the H2 console at `/h2-console` unreachable from outside.
+
 ## API
 
 Panel routes expect `Authorization: Bearer <token>`. Bridge routes expect `X-API-Key`.
