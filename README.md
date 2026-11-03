@@ -1,12 +1,12 @@
 # CraftAdmin — Minecraft Server Admin Panel
 
-Backend API for a Minecraft server admin panel. It stores what happens on the server (joins,
+Admin panel for a Minecraft server. The backend stores what happens on the server (joins,
 leaves, chat, deaths, advancements), tracks play sessions, serves player skins, streams live
-events and runs moderation commands through a local bridge process.
+events and runs moderation commands through a local bridge process. A React frontend shows
+all of it.
 
-The backend is implemented. The other two programs of the panel, a Node.js bridge that reads
-the server log and executes RCON commands and a React frontend, are scaffolded with their
-dependencies installed and their file structure in place.
+The three programs of the panel are implemented: the backend API, the Node.js bridge that
+reads the server log and executes RCON commands, and the React frontend.
 
 ## Stack
 
@@ -14,13 +14,21 @@ dependencies installed and their file structure in place.
 - Spring Security: JWT for panel users, API key for the bridge
 - Spring Data JPA with H2 in file mode (`backend/data/`)
 - JJWT 0.13.0 for token signing
+- Node.js 20 or newer for the bridge: Fastify, `tail`, `minecraft-server-util`, `rcon-client`
+- React 19, TypeScript, Vite, Tailwind, React Query, Recharts and skinview3d
 
 ## Requirements
 
 - JDK 21 or newer
+- Node.js 20 or newer
 - The Maven wrapper is included, so a local Maven install is not required
 
 ## Run
+
+The backend, the bridge and the frontend run as three separate processes. Start them in
+this order, each in its own terminal.
+
+### 1. Backend
 
 ```bash
 cd backend
@@ -34,6 +42,31 @@ The first start creates the schema and seeds an administrator when the admin tab
 | Username | Password |
 |---|---|
 | `admin` | `admin1234` |
+
+### 2. Bridge
+
+```bash
+cd minecraft-bridge
+cp .env.example .env   # once, then set LOG_PATH and the RCON password
+npm install
+npm start
+```
+
+The bridge follows the Minecraft server log, forwards events to the backend and exposes
+`POST /cmd` on `http://127.0.0.1:4001` for moderation commands. It needs the Minecraft
+server running for the status ping and RCON; without it the panel shows the server as
+offline and every action returns the RCON error.
+
+### 3. Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open `http://localhost:5173` and sign in with the seeded administrator. The dev server
+proxies `/api` to the backend, so no CORS configuration is needed.
 
 ## Configuration
 
