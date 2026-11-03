@@ -1,6 +1,7 @@
 {
   "name": "minecraft-bridge",
   "version": "1.0.0",
+  "license": "MIT",
   "description": "Reads the Minecraft server log and forwards events to the CraftAdmin backend, and runs RCON commands on request.",
   "main": "index.js",
   "scripts": {

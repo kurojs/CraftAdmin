@@ -129,3 +129,7 @@ offline from then on.
 cd backend
 ./mvnw test
 ```
+
+## License
+
+MIT. See [LICENSE](LICENSE).
