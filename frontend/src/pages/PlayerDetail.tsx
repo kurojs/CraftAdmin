@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { apiClient } from "../api/client";
 import type { Page, Player, Session } from "../api/types";
 import SkinViewer3D from "../components/SkinViewer3D";
@@ -32,111 +33,170 @@ export default function PlayerDetail() {
     enabled: !!uuid,
   });
 
-  if (playerQuery.isLoading) return <p>Loading...</p>;
+  if (playerQuery.isLoading) return <p className="mc-note">Loading...</p>;
   if (playerQuery.isError || !playerQuery.data) {
-    return <p className="text-red-600">Could not load the player.</p>;
+    return <p className="mc-error">Could not load the player.</p>;
   }
 
   const player = playerQuery.data;
   const sessions = sessionsQuery.data;
-  const hasNext = sessions ? (page + 1) * sessions.size < sessions.totalElements : false;
+  const hasNext = sessions
+    ? (page + 1) * sessions.size < sessions.totalElements
+    : false;
+  const totalPages = sessions
+    ? Math.max(Math.ceil(sessions.totalElements / sessions.size), 1)
+    : 1;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-4">
-        <h1 className="text-2xl font-bold">{player.name}</h1>
-        <span
-          className={`rounded px-2 py-1 text-sm ${
-            player.online
-              ? "bg-green-100 text-green-800"
-              : "bg-gray-200 text-gray-700"
-          }`}
-        >
-          {player.online ? "Online" : "Offline"}
-        </span>
-        {player.banned && (
-          <span className="rounded bg-red-100 px-2 py-1 text-sm text-red-800">
-            Banned
+    <div className="mc-stack">
+      <div>
+        <Link to="/players" className="mc-back">
+          <ArrowLeft aria-hidden="true" />
+          Back to players
+        </Link>
+
+        <header className="mc-page-head mt-2">
+          <h1 className="mc-page-title">{player.name}</h1>
+          <p className="mc-page-sub">
+            Player profile, play sessions and moderation actions.
+          </p>
+        </header>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          <span
+            className={
+              "mc-badge " +
+              (player.online ? "mc-badge-online" : "mc-badge-offline")
+            }
+          >
+            {player.online ? "Online" : "Offline"}
           </span>
-        )}
+          {player.banned && (
+            <span className="mc-badge mc-badge-danger">Banned</span>
+          )}
+        </div>
       </div>
 
-      <dl className="grid gap-4 text-sm md:grid-cols-4">
-        <div>
-          <dt className="text-gray-500">UUID</dt>
-          <dd className="font-mono text-xs">{player.uuid}</dd>
+      <section className="mc-panel">
+        <div className="mc-panel-head">
+          <h2 className="mc-panel-title">Profile</h2>
+          <span className="mc-label mc-label-inline">
+            {player.uuid.slice(0, 8)}
+          </span>
         </div>
-        <div>
-          <dt className="text-gray-500">First seen</dt>
-          <dd>{new Date(player.firstSeen).toLocaleString()}</dd>
-        </div>
-        <div>
-          <dt className="text-gray-500">Last seen</dt>
-          <dd>
-            {timeAgo(player.lastSeen)} ({new Date(player.lastSeen).toLocaleString()})
-          </dd>
-        </div>
-        <div>
-          <dt className="text-gray-500">Total playtime</dt>
-          <dd>{formatDuration(player.totalPlaytimeSeconds)}</dd>
-        </div>
-      </dl>
 
-      <ActionButtons name={player.name} banned={player.banned} />
+        <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="mc-stat">
+            <dt>UUID</dt>
+            <dd className="break-all font-mono text-xs">{player.uuid}</dd>
+          </div>
+          <div className="mc-stat">
+            <dt>First seen</dt>
+            <dd>{new Date(player.firstSeen).toLocaleString()}</dd>
+          </div>
+          <div className="mc-stat">
+            <dt>Last seen</dt>
+            <dd>
+              {timeAgo(player.lastSeen)}
+              <span className="mc-label mt-1">
+                {new Date(player.lastSeen).toLocaleString()}
+              </span>
+            </dd>
+          </div>
+          <div className="mc-stat">
+            <dt>Total playtime</dt>
+            <dd>{formatDuration(player.totalPlaytimeSeconds)}</dd>
+          </div>
+        </dl>
+      </section>
 
-      <SkinViewer3D name={player.name} />
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
+        <section className="mc-panel">
+          <div className="mc-panel-head">
+            <h2 className="mc-panel-title">Sessions</h2>
+            <span className="mc-badge mc-badge-offline">
+              {sessions ? `${sessions.totalElements} total` : "Loading"}
+            </span>
+          </div>
 
-      <div>
-        <h2 className="mb-4 text-xl font-bold">Sessions</h2>
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr>
-              <th className="p-2">Start</th>
-              <th className="p-2">End</th>
-              <th className="p-2">Duration</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sessions?.content.map((session) => (
-              <tr key={session.id} className="border-t">
-                <td className="p-2">
-                  {new Date(session.joinedAt).toLocaleString()}
-                </td>
-                <td className="p-2">
-                  {session.leftAt
-                    ? new Date(session.leftAt).toLocaleString()
-                    : "Ongoing"}
-                </td>
-                <td className="p-2">
-                  {formatDuration(session.durationSeconds ?? 0)}
-                </td>
-              </tr>
-            ))}
-            {sessions && sessions.content.length === 0 && (
-              <tr>
-                <td className="p-2 text-gray-500" colSpan={3}>
-                  No sessions recorded.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-        <div className="mt-4 flex items-center justify-between">
-          <button
-            className="rounded bg-gray-200 px-4 py-2 disabled:opacity-50"
-            onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
-            disabled={page === 0}
-          >
-            Previous
-          </button>
-          <span>Page {page + 1}</span>
-          <button
-            className="rounded bg-gray-200 px-4 py-2 disabled:opacity-50"
-            onClick={() => setPage((prev) => prev + 1)}
-            disabled={!hasNext}
-          >
-            Next
-          </button>
+          {sessionsQuery.isError && (
+            <p className="mc-error">Could not load the sessions.</p>
+          )}
+
+          <div className="mc-table-wrap">
+            <table className="mc-table">
+              <thead>
+                <tr>
+                  <th>Start</th>
+                  <th>End</th>
+                  <th>Duration</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sessions?.content.map((session) => (
+                  <tr key={session.id}>
+                    <td>{new Date(session.joinedAt).toLocaleString()}</td>
+                    <td>
+                      {session.leftAt
+                        ? new Date(session.leftAt).toLocaleString()
+                        : "Ongoing"}
+                    </td>
+                    <td>
+                      {formatDuration(session.durationSeconds ?? 0)}
+                    </td>
+                  </tr>
+                ))}
+                {sessions && sessions.content.length === 0 && (
+                  <tr>
+                    <td colSpan={3}>
+                      <p className="mc-empty">No sessions recorded.</p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mc-pagination">
+            <button
+              type="button"
+              className="mc-btn mc-btn-sm"
+              onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
+              disabled={page === 0}
+            >
+              <ChevronLeft aria-hidden="true" />
+              Previous
+            </button>
+            <span className="mc-page-count">
+              Page {page + 1} of {totalPages}
+            </span>
+            <button
+              type="button"
+              className="mc-btn mc-btn-sm"
+              onClick={() => setPage((prev) => prev + 1)}
+              disabled={!hasNext}
+            >
+              Next
+              <ChevronRight aria-hidden="true" />
+            </button>
+          </div>
+        </section>
+
+        <div className="flex flex-col gap-6">
+          <section className="mc-panel">
+            <div className="mc-panel-head">
+              <h2 className="mc-panel-title">Skin</h2>
+              <span className="mc-badge mc-badge-diamond">3D</span>
+            </div>
+            <SkinViewer3D name={player.name} />
+          </section>
+
+          <section className="mc-panel">
+            <div className="mc-panel-head">
+              <h2 className="mc-panel-title">Moderation</h2>
+            </div>
+            <ActionButtons name={player.name} banned={player.banned} />
+          </section>
         </div>
       </div>
     </div>

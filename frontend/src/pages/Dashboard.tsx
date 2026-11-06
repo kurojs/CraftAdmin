@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useOnlinePlayers } from "../hooks/useOnlinePlayers";
 import { useRecentEvents } from "../hooks/useRecentEvents";
 import { useServerStatus } from "../hooks/useServerStatus";
@@ -14,78 +15,143 @@ export default function Dashboard() {
 
   const status = statusQuery.data;
   const events = liveEvents.length > 0 ? liveEvents : (eventsQuery.data ?? []);
+  const onlinePlayers = onlinePlayersQuery.data ?? [];
+
+  const slotPercent =
+    status && status.playersMax > 0
+      ? Math.min(100, Math.round((status.playersOnline / status.playersMax) * 100))
+      : 0;
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
+    <div className="mc-stack">
+      <header className="mc-page-head">
+        <h1 className="mc-page-title">Dashboard</h1>
+        <p className="mc-page-sub">
+          Live overview of the server, its players and the latest events.
+        </p>
+      </header>
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="mb-3 text-xl font-semibold">Server status</h2>
-        {statusQuery.isLoading && <p>Loading...</p>}
+      <section className="mc-panel">
+        <div className="mc-panel-head">
+          <h2 className="mc-panel-title">Server status</h2>
+          {status && (
+            <span
+              className={
+                "mc-badge " +
+                (status.online ? "mc-badge-online" : "mc-badge-offline")
+              }
+            >
+              {status.online ? "Online" : "Offline"}
+            </span>
+          )}
+        </div>
+
+        {statusQuery.isLoading && <p className="mc-note">Loading status...</p>}
         {statusQuery.isError && (
-          <p className="text-red-600">Could not load the server status.</p>
+          <p className="mc-error">Could not load the server status.</p>
         )}
+
         {status && (
-          <dl className="grid gap-4 text-sm md:grid-cols-4">
-            <div>
-              <dt className="text-gray-500">State</dt>
-              <dd className={status.online ? "text-green-600" : "text-red-600"}>
-                {status.online ? "Online" : "Offline"}
-              </dd>
+          <>
+            <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="mc-stat">
+                <dt>State</dt>
+                <dd
+                  className={
+                    status.online ? "text-mc-grass" : "text-mc-redstone"
+                  }
+                >
+                  {status.online ? "Online" : "Offline"}
+                </dd>
+              </div>
+              <div className="mc-stat">
+                <dt>Version</dt>
+                <dd>{status.version || "-"}</dd>
+              </div>
+              <div className="mc-stat">
+                <dt>Players</dt>
+                <dd>
+                  {status.playersOnline} / {status.playersMax}
+                </dd>
+              </div>
+              <div className="mc-stat">
+                <dt>Latency</dt>
+                <dd>{status.latencyMs} ms</dd>
+              </div>
+            </dl>
+
+            <div className="mt-4">
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <span className="mc-label mc-label-inline">Player slots</span>
+                <span className="mc-page-count">{slotPercent}%</span>
+              </div>
+              <div className="mc-xpbar" role="presentation">
+                <span style={{ width: `${slotPercent}%` }} />
+              </div>
             </div>
-            <div>
-              <dt className="text-gray-500">Version</dt>
-              <dd>{status.version || "-"}</dd>
-            </div>
-            <div>
-              <dt className="text-gray-500">Players</dt>
-              <dd>
-                {status.playersOnline} / {status.playersMax}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-gray-500">Latency</dt>
-              <dd>{status.latencyMs} ms</dd>
-            </div>
-          </dl>
+          </>
         )}
       </section>
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="mb-3 text-xl font-semibold">Online players</h2>
-        {onlinePlayersQuery.isLoading && <p>Loading...</p>}
+      <section className="mc-panel">
+        <div className="mc-panel-head">
+          <h2 className="mc-panel-title">Online players</h2>
+          <span className="mc-badge mc-badge-gold">
+            {onlinePlayers.length} online
+          </span>
+        </div>
+
+        {onlinePlayersQuery.isLoading && <p className="mc-note">Loading...</p>}
         {onlinePlayersQuery.isError && (
-          <p className="text-red-600">Could not load the online players.</p>
+          <p className="mc-error">Could not load the online players.</p>
         )}
-        {onlinePlayersQuery.data && onlinePlayersQuery.data.length === 0 && (
-          <p className="text-gray-500">Nobody is playing right now.</p>
+        {onlinePlayersQuery.data && onlinePlayers.length === 0 && (
+          <p className="mc-empty">Nobody is playing right now.</p>
         )}
-        <div className="flex flex-wrap gap-2">
-          {onlinePlayersQuery.data?.map((p) => (
-            <div
-              key={p.uuid}
-              className="flex items-center gap-2 rounded border px-3 py-2"
+
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+          {onlinePlayers.map((player) => (
+            <Link
+              key={player.uuid}
+              to={`/players/${player.uuid}`}
+              className="mc-player-chip"
             >
-              <PlayerAvatar name={p.name} />
-              <span>{p.name}</span>
-            </div>
+              <PlayerAvatar name={player.name} size={40} />
+              <span className="min-w-0">
+                <span className="block truncate font-semibold text-white">
+                  {player.name}
+                </span>
+                <span className="mc-label mc-label-inline">Playing now</span>
+              </span>
+              <span className="mc-dot ml-auto" aria-hidden="true" />
+            </Link>
           ))}
         </div>
       </section>
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="mb-3 text-xl font-semibold">Activity</h2>
-        {eventsQuery.isLoading && liveEvents.length === 0 && <p>Loading...</p>}
-        {eventsQuery.isError && liveEvents.length === 0 && (
-          <p className="text-red-600">Could not load the recent events.</p>
-        )}
-        <EventFeed events={events} />
-      </section>
+      <div className="grid gap-6 xl:grid-cols-2">
+        <section className="mc-panel">
+          <div className="mc-panel-head">
+            <h2 className="mc-panel-title">Live activity</h2>
+            <span className="mc-badge mc-badge-diamond">Live</span>
+          </div>
+          {eventsQuery.isLoading && liveEvents.length === 0 && (
+            <p className="mc-note">Loading...</p>
+          )}
+          {eventsQuery.isError && liveEvents.length === 0 && (
+            <p className="mc-error">Could not load the recent events.</p>
+          )}
+          <EventFeed events={events} />
+        </section>
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="mb-3 text-xl font-semibold">Last 7 days</h2>
-        <ActivityChart />
-      </section>
+        <section className="mc-panel">
+          <div className="mc-panel-head">
+            <h2 className="mc-panel-title">Last 14 days</h2>
+            <span className="mc-label mc-label-inline">Hours / players</span>
+          </div>
+          <ActivityChart />
+        </section>
+      </div>
     </div>
   );
 }

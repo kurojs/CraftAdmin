@@ -32,7 +32,10 @@ export default function ActionButtons({ name, banned }: ActionButtonsProps) {
       queryClient.invalidateQueries({ queryKey: ["player"] });
       queryClient.invalidateQueries({ queryKey: ["audit"] });
     } catch (error) {
-      setMessage({ ok: false, text: apiErrorMessage(error, "Failed to execute the action") });
+      setMessage({
+        ok: false,
+        text: apiErrorMessage(error, "Failed to execute the action"),
+      });
     } finally {
       setPending(false);
     }
@@ -64,7 +67,7 @@ export default function ActionButtons({ name, banned }: ActionButtonsProps) {
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap gap-2">
         <button
-          className="rounded bg-orange-600 px-3 py-1 text-sm text-white hover:bg-orange-700 disabled:opacity-50"
+          className="mc-btn mc-btn-sm mc-btn-gold"
           onClick={kick}
           disabled={pending}
         >
@@ -72,7 +75,7 @@ export default function ActionButtons({ name, banned }: ActionButtonsProps) {
         </button>
         {banned ? (
           <button
-            className="rounded bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700 disabled:opacity-50"
+            className="mc-btn mc-btn-sm mc-btn-primary"
             onClick={pardon}
             disabled={pending}
           >
@@ -80,7 +83,7 @@ export default function ActionButtons({ name, banned }: ActionButtonsProps) {
           </button>
         ) : (
           <button
-            className="rounded bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-700 disabled:opacity-50"
+            className="mc-btn mc-btn-sm mc-btn-danger"
             onClick={ban}
             disabled={pending}
           >
@@ -88,14 +91,14 @@ export default function ActionButtons({ name, banned }: ActionButtonsProps) {
           </button>
         )}
         <button
-          className="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+          className="mc-btn mc-btn-sm mc-btn-primary"
           onClick={() => whitelist(true)}
           disabled={pending}
         >
           Whitelist
         </button>
         <button
-          className="rounded bg-gray-600 px-3 py-1 text-sm text-white hover:bg-gray-700 disabled:opacity-50"
+          className="mc-btn mc-btn-sm"
           onClick={() => whitelist(false)}
           disabled={pending}
         >
@@ -104,11 +107,11 @@ export default function ActionButtons({ name, banned }: ActionButtonsProps) {
       </div>
       {message && (
         <p
-          className={`rounded p-2 text-sm ${
-            message.ok
-              ? "bg-green-100 text-green-800"
-              : "bg-red-100 text-red-800"
-          }`}
+          className={
+            "mc-alert " +
+            (message.ok ? "mc-alert-ok" : "mc-alert-error")
+          }
+          role="status"
         >
           {message.text}
         </p>

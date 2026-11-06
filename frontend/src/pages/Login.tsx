@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import { LogIn } from "lucide-react";
 
 export default function Login() {
   const { login } = useAuth();
@@ -25,58 +26,85 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-sm rounded bg-white p-8 shadow-md"
-      >
-        <h1 className="mb-1 text-center text-2xl font-bold">CraftAdmin</h1>
-        <p className="mb-6 text-center text-sm text-gray-500">
-          Sign in to manage the server
-        </p>
-        {error && <p className="mb-4 text-red-600">{error}</p>}
-        <div className="mb-4">
-          <label
-            htmlFor="username"
-            className="mb-2 block text-sm font-bold text-gray-700"
-          >
-            Username
-          </label>
-          <input
-            type="text"
-            id="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            autoComplete="username"
-            className="w-full rounded border px-3 py-2 text-gray-700 focus:outline-none"
-            required
+    <div className="mc-login">
+      <span className="mc-sun" aria-hidden="true" />
+      <span className="mc-cloud mc-cloud-1" aria-hidden="true" />
+      <span className="mc-cloud mc-cloud-2" aria-hidden="true" />
+      <span className="mc-cloud mc-cloud-3" aria-hidden="true" />
+      <div className="mc-ground" aria-hidden="true" />
+
+      <main className="mc-login-wrap">
+        <div className="mc-login-brand">
+          <span
+            className="mc-grass-block mc-grass-block-lg"
+            aria-hidden="true"
           />
+          <div>
+            <p className="mc-logo-xl">
+              Craft<span>Admin</span>
+            </p>
+            <p className="mc-logo-sub">Minecraft server panel</p>
+          </div>
         </div>
-        <div className="mb-6">
-          <label
-            htmlFor="password"
-            className="mb-2 block text-sm font-bold text-gray-700"
+
+        <form onSubmit={handleSubmit} className="mc-panel mc-login-card">
+          <div className="mc-panel-head">
+            <h1 className="mc-panel-title">Sign in</h1>
+            <span className="mc-badge mc-badge-gold">Admin panel</span>
+          </div>
+
+          {error && (
+            <p className="mc-alert mc-alert-error mb-4" role="alert">
+              {error}
+            </p>
+          )}
+
+          <div className="mb-3">
+            <label htmlFor="username" className="mc-label">
+              Username
+            </label>
+            <input
+              type="text"
+              id="username"
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+              autoComplete="username"
+              className="mc-input"
+              placeholder="Steve"
+              required
+            />
+          </div>
+
+          <div className="mb-5">
+            <label htmlFor="password" className="mc-label">
+              Password
+            </label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              autoComplete="current-password"
+              className="mc-input"
+              placeholder="Enter your password"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={pending}
+            className="mc-btn mc-btn-primary mc-btn-block"
           >
-            Password
-          </label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-            className="w-full rounded border px-3 py-2 text-gray-700 focus:outline-none"
-            required
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={pending}
-          className="w-full rounded bg-blue-600 px-4 py-2 font-bold text-white hover:bg-blue-700 disabled:opacity-50"
-        >
-          {pending ? "Signing in..." : "Sign in"}
-        </button>
-      </form>
+            <LogIn aria-hidden="true" />
+            {pending ? "Signing in..." : "Sign in"}
+          </button>
+
+          <p className="mc-hint mt-4 text-center">
+            CraftAdmin · Minecraft server administration
+          </p>
+        </form>
+      </main>
     </div>
   );
 }

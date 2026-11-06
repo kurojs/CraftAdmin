@@ -8,9 +8,16 @@ import {
 import { apiClient } from "../api/client";
 import PlayerAvatar from "./PlayerAvatar";
 
+const ANIMATIONS = [
+  { value: "idle", label: "Idle" },
+  { value: "walk", label: "Walk" },
+  { value: "run", label: "Run" },
+];
+
 export default function SkinViewer3D({ name }: { name: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const viewerRef = useRef<SkinViewer | null>(null);
+  const [animation, setAnimation] = useState("walk");
   const [error, setError] = useState(false);
 
   useEffect(() => {
@@ -33,6 +40,7 @@ export default function SkinViewer3D({ name }: { name: string }) {
         viewerRef.current = viewer;
         await viewer.loadSkin(url);
         viewer.animation = new WalkingAnimation();
+        setAnimation("walk");
       } catch {
         setError(true);
       }
@@ -48,33 +56,47 @@ export default function SkinViewer3D({ name }: { name: string }) {
   }, [name]);
 
   function changeAnimation(type: string) {
-    const v = viewerRef.current;
-    if (!v) return;
-    if (type === "idle") v.animation = new IdleAnimation();
-    if (type === "walk") v.animation = new WalkingAnimation();
-    if (type === "run") v.animation = new RunningAnimation();
+    const viewer = viewerRef.current;
+    if (!viewer) return;
+    setAnimation(type);
+    if (type === "idle") viewer.animation = new IdleAnimation();
+    if (type === "walk") viewer.animation = new WalkingAnimation();
+    if (type === "run") viewer.animation = new RunningAnimation();
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center gap-2 p-4 text-red-500">
+      <div className="flex flex-col items-center gap-3 p-2">
         <PlayerAvatar name={name} size={128} />
-        <p>Could not load skin</p>
+        <p className="mc-error">Could not load the skin.</p>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <canvas ref={canvasRef} />
-      <select
-        className="px-2 py-1 rounded border"
-        onChange={(e) => changeAnimation(e.target.value)}
-      >
-        <option value="idle">Idle</option>
-        <option value="walk">Walk</option>
-        <option value="run">Run</option>
-      </select>
+      <div className="mc-slot w-full p-2">
+        <canvas
+          ref={canvasRef}
+          className="block h-auto max-w-full"
+          style={{ imageRendering: "pixelated" }}
+        />
+      </div>
+      <div className="flex flex-wrap justify-center gap-1">
+        {ANIMATIONS.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            className={
+              "mc-btn mc-btn-sm" +
+              (animation === option.value ? " mc-btn-primary" : "")
+            }
+            onClick={() => changeAnimation(option.value)}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

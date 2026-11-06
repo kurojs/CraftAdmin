@@ -1,5 +1,6 @@
 import { Navigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { apiClient } from "../api/client";
 import type { AuditEntry, Page } from "../api/types";
@@ -33,66 +34,107 @@ export default function Audit() {
   }
 
   const hasNext = data ? (page + 1) * data.size < data.totalElements : false;
+  const totalPages = data
+    ? Math.max(Math.ceil(data.totalElements / data.size), 1)
+    : 1;
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Audit</h1>
-      {isLoading && <p>Loading...</p>}
-      {isError && <p className="text-red-600">Could not load the audit log.</p>}
-      <table className="w-full text-left text-sm">
-        <thead>
-          <tr>
-            <th className="p-2">Date</th>
-            <th className="p-2">Admin</th>
-            <th className="p-2">Action</th>
-            <th className="p-2">Target</th>
-            <th className="p-2">Result</th>
-            <th className="p-2">Detail</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data?.content.map((entry) => (
-            <tr key={entry.id} className="border-t">
-              <td className="p-2">
-                {new Date(entry.createdAt).toLocaleString()}
-              </td>
-              <td className="p-2">{entry.adminUsername ?? "-"}</td>
-              <td className="p-2">{entry.action}</td>
-              <td className="p-2">{entry.target ?? "-"}</td>
-              <td
-                className={`p-2 ${entry.success ? "text-green-600" : "text-red-600"}`}
-              >
-                {entry.success ? "OK" : "Failed"}
-              </td>
-              <td className="p-2">{entry.detail ?? ""}</td>
-            </tr>
-          ))}
-          {data && data.content.length === 0 && (
-            <tr>
-              <td className="p-2 text-gray-500" colSpan={6}>
-                No actions recorded.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-      <div className="flex items-center justify-between">
-        <button
-          className="rounded bg-gray-200 px-4 py-2 disabled:opacity-50"
-          onClick={() => handlePageChange(page - 1)}
-          disabled={page === 0}
-        >
-          Previous
-        </button>
-        <span>Page {page + 1}</span>
-        <button
-          className="rounded bg-gray-200 px-4 py-2 disabled:opacity-50"
-          onClick={() => handlePageChange(page + 1)}
-          disabled={!hasNext}
-        >
-          Next
-        </button>
-      </div>
+    <div className="mc-stack">
+      <header className="mc-page-head">
+        <h1 className="mc-page-title">Audit</h1>
+        <p className="mc-page-sub">
+          Every moderation action executed from this panel.
+        </p>
+      </header>
+
+      <section className="mc-panel">
+        <div className="mc-panel-head">
+          <h2 className="mc-panel-title">Action log</h2>
+          <span className="mc-badge mc-badge-plum">
+            {data ? `${data.totalElements} entries` : "Loading"}
+          </span>
+        </div>
+
+        {isLoading && <p className="mc-note">Loading...</p>}
+        {isError && (
+          <p className="mc-error">Could not load the audit log.</p>
+        )}
+
+        <div className="mc-table-wrap">
+          <table className="mc-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Admin</th>
+                <th>Action</th>
+                <th>Target</th>
+                <th>Result</th>
+                <th>Detail</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data?.content.map((entry) => (
+                <tr key={entry.id}>
+                  <td className="whitespace-nowrap text-mc-muted">
+                    {new Date(entry.createdAt).toLocaleString()}
+                  </td>
+                  <td>{entry.adminUsername ?? "-"}</td>
+                  <td>
+                    <span className="mc-badge mc-badge-lapis">
+                      {entry.action}
+                    </span>
+                  </td>
+                  <td>{entry.target ?? "-"}</td>
+                  <td>
+                    <span
+                      className={
+                        "mc-badge " +
+                        (entry.success
+                          ? "mc-badge-online"
+                          : "mc-badge-danger")
+                      }
+                    >
+                      {entry.success ? "OK" : "Failed"}
+                    </span>
+                  </td>
+                  <td className="text-mc-muted">{entry.detail ?? ""}</td>
+                </tr>
+              ))}
+              {data && data.content.length === 0 && (
+                <tr>
+                  <td colSpan={6}>
+                    <p className="mc-empty">No actions recorded.</p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="mc-pagination">
+          <button
+            type="button"
+            className="mc-btn mc-btn-sm"
+            onClick={() => handlePageChange(page - 1)}
+            disabled={page === 0}
+          >
+            <ChevronLeft aria-hidden="true" />
+            Previous
+          </button>
+          <span className="mc-page-count">
+            Page {page + 1} of {totalPages}
+          </span>
+          <button
+            type="button"
+            className="mc-btn mc-btn-sm"
+            onClick={() => handlePageChange(page + 1)}
+            disabled={!hasNext}
+          >
+            Next
+            <ChevronRight aria-hidden="true" />
+          </button>
+        </div>
+      </section>
     </div>
   );
 }

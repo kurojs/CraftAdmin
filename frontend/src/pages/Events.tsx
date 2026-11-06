@@ -1,26 +1,28 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { apiClient } from "../api/client";
-import type { Page, GameEvent } from "../api/types";
+import type { Event, Page, GameEvent } from "../api/types";
 import PlayerAvatar from "../components/PlayerAvatar";
 import { timeAgo } from "../utils/format";
+import { eventClass } from "../utils/eventStyles";
 
-const COLORS: Record<string, string> = {
-  JOIN: "bg-green-600",
-  LEAVE: "bg-yellow-600",
-  DEATH: "bg-red-600",
-  CHAT: "bg-blue-600",
-  ADVANCEMENT: "bg-purple-600",
-  SERVER_START: "bg-gray-600",
-  SERVER_STOP: "bg-gray-600",
-};
+const EVENT_TYPES: Event[] = [
+  "JOIN",
+  "LEAVE",
+  "DEATH",
+  "CHAT",
+  "ADVANCEMENT",
+  "SERVER_START",
+  "SERVER_STOP",
+];
 
 export default function Events() {
   const [params, setParams] = useSearchParams();
   const type = params.get("type") ?? "";
   const page = Number(params.get("page") ?? "0");
 
-  const { data } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["events", { type, page }],
     queryFn: async () => {
       const res = await apiClient.get<Page<GameEvent>>("/events", {
@@ -55,73 +57,132 @@ export default function Events() {
     });
   }
 
-  const hasNext =
-    data &&
-    (data.page + 1) * data.size < data.totalElements;
+  const hasNext = data && (data.page + 1) * data.size < data.totalElements;
+  const totalPages = data
+    ? Math.max(Math.ceil(data.totalElements / data.size), 1)
+    : 1;
 
   return (
-    <div>
-      <div className="mb-4 flex gap-2">
-        <button
-          className={`px-4 py-2 rounded ${
-            type === "" ? "bg-blue-600 text-white" : "bg-gray-200"
-          }`}
-          onClick={() => handleTypeChange("")}
-        >
-          All
-        </button>
-        {Object.keys(COLORS).map((eventType) => (
+    <div className="mc-stack">
+      <header className="mc-page-head">
+        <h1 className="mc-page-title">Events</h1>
+        <p className="mc-page-sub">
+          Every join, leave, death, chat message and advancement on the server.
+        </p>
+      </header>
+
+      <section className="mc-panel">
+        <div className="mc-panel-head">
+          <h2 className="mc-panel-title">Filter by event</h2>
+          <span className="mc-badge mc-badge-offline">
+            {data ? `${data.totalElements} events` : "Loading"}
+          </span>
+        </div>
+
+        <div className="flex flex-wrap gap-1">
           <button
-            key={eventType}
-            className={`px-4 py-2 rounded ${
-              type === eventType ? "bg-blue-600 text-white" : "bg-gray-200"
-            }`}
-            onClick={() => handleTypeChange(eventType)}
+            type="button"
+            className={
+              "mc-btn mc-btn-sm" + (type === "" ? " mc-btn-primary" : "")
+            }
+            onClick={() => handleTypeChange("")}
           >
-            {eventType}
+            All
           </button>
-        ))}
-      </div>
-      <table className="w-full text-left">
-        <thead>
-          <tr>
-            <th className="p-2">Event Type</th>
-            <th className="p-2">Player</th>
-            <th className="p-2">Timestamp</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data?.content.map((event) => (
-            <tr key={event.id} className="border-t">
-              <td className={`p-2 ${COLORS[event.type] ?? "bg-gray-200"}`}>
-                {event.type}
-              </td>
-              <td className="p-2 flex items-center gap-2">
-                {event.playerName && <PlayerAvatar name={event.playerName} />}
-                {event.playerName ?? "N/A"}
-              </td>
-              <td className="p-2">{timeAgo(event.createdAt)}</td>
-            </tr>
+          {EVENT_TYPES.map((eventType) => (
+            <button
+              key={eventType}
+              type="button"
+              className={
+                "mc-btn mc-btn-sm" +
+                (type === eventType ? " mc-btn-primary" : "")
+              }
+              onClick={() => handleTypeChange(eventType)}
+            >
+              {eventType}
+            </button>
           ))}
-        </tbody>
-      </table>
-      <div className="mt-4 flex justify-between">
-        <button
-          className="px-4 py-2 bg-gray-200 rounded"
-          onClick={() => handlePageChange(page - 1)}
-          disabled={page === 0}
-        >
-          Previous
-        </button>
-        <span>Page {page + 1}</span>
-        <button
-          className="px-4 py-2 bg-gray-200 rounded"
-          onClick={() => handlePageChange(page + 1)}
-          disabled={!hasNext}
-        >
-          Next
-        </button>
-      </div>
+        </div>
+      </section>
+
+      <section className="mc-panel">
+        <div className="mc-panel-head">
+          <h2 className="mc-panel-title">Event history</h2>
+          <span className="mc-label mc-label-inline">Newest first</span>
+        </div>
+
+        {isLoading && <p className="mc-note">Loading...</p>}
+        {isError && <p className="mc-error">Could not load the events.</p>}
+
+        <div className="mc-table-wrap">
+          <table className="mc-table">
+            <thead>
+              <tr>
+                <th>Event</th>
+                <th>Player</th>
+                <th>Detail</th>
+                <th>When</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data?.content.map((event) => (
+                <tr key={event.id}>
+                  <td>
+                    <span
+                      className={"mc-event-tag " + eventClass(event.type)}
+                    >
+                      {event.type}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="flex items-center gap-2">
+                      {event.playerName && (
+                        <PlayerAvatar name={event.playerName} size={24} />
+                      )}
+                      <span>{event.playerName ?? "N/A"}</span>
+                    </div>
+                  </td>
+                  <td className="text-mc-muted">{event.message ?? "-"}</td>
+                  <td className="text-mc-muted">
+                    {timeAgo(event.createdAt)}
+                  </td>
+                </tr>
+              ))}
+              {data && data.content.length === 0 && (
+                <tr>
+                  <td colSpan={4}>
+                    <p className="mc-empty">No events for this filter.</p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="mc-pagination">
+          <button
+            type="button"
+            className="mc-btn mc-btn-sm"
+            onClick={() => handlePageChange(page - 1)}
+            disabled={page === 0}
+          >
+            <ChevronLeft aria-hidden="true" />
+            Previous
+          </button>
+          <span className="mc-page-count">
+            Page {page + 1} of {totalPages}
+          </span>
+          <button
+            type="button"
+            className="mc-btn mc-btn-sm"
+            onClick={() => handlePageChange(page + 1)}
+            disabled={!hasNext}
+          >
+            Next
+            <ChevronRight aria-hidden="true" />
+          </button>
+        </div>
+      </section>
     </div>
   );
 }

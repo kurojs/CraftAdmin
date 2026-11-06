@@ -17,8 +17,9 @@ export default function PlayerAvatar({
   if (attempt >= avatarUrls.length) {
     return (
       <div
-        className="bg-gray-300 rounded-full"
+        className="mc-avatar mc-avatar-fallback"
         style={{ width: size, height: size }}
+        aria-hidden="true"
       />
     );
   }
@@ -28,7 +29,7 @@ export default function PlayerAvatar({
       src={avatarUrls[attempt]}
       width={size}
       height={size}
-      className="rounded-full"
+      className="mc-avatar"
       alt={name}
       onError={() => setAttempt((prev) => prev + 1)}
     />

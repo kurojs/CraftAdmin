@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { usePlayers } from "../hooks/usePlayers";
 import PlayerAvatar from "../components/PlayerAvatar";
 import { formatDuration, timeAgo } from "../utils/format";
@@ -42,125 +43,187 @@ export default function Players() {
   }
 
   const hasNext = data ? (page + 1) * data.size < data.totalElements : false;
+  const totalPages = data
+    ? Math.max(Math.ceil(data.totalElements / data.size), 1)
+    : 1;
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <form
-          className="flex gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            update({ q: search, page: "0" });
-          }}
-        >
-          <input
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name"
-            className="rounded border px-3 py-2"
-          />
-          <button className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
-            Search
-          </button>
-        </form>
+    <div className="mc-stack">
+      <header className="mc-page-head">
+        <h1 className="mc-page-title">Players</h1>
+        <p className="mc-page-sub">
+          Everyone who has joined the server, with playtime and moderation
+          state.
+        </p>
+      </header>
 
-        <select
-          value={online ?? "all"}
-          onChange={(e) =>
-            update({
-              online: e.target.value === "all" ? null : e.target.value,
-              page: "0",
-            })
-          }
-          className="rounded border px-3 py-2"
-        >
-          <option value="all">All players</option>
-          <option value="true">Online</option>
-          <option value="false">Offline</option>
-        </select>
+      <section className="mc-panel">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
+          <form
+            className="flex flex-1 items-end gap-2"
+            onSubmit={(event) => {
+              event.preventDefault();
+              update({ q: search, page: "0" });
+            }}
+          >
+            <div className="min-w-0 flex-1">
+              <label htmlFor="player-search" className="mc-label">
+                Search
+              </label>
+              <input
+                id="player-search"
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search by name"
+                className="mc-input"
+              />
+            </div>
+            <button type="submit" className="mc-btn mc-btn-primary">
+              <Search aria-hidden="true" />
+              Search
+            </button>
+          </form>
 
-        <select
-          value={sort}
-          onChange={(e) => update({ sort: e.target.value, page: "0" })}
-          className="rounded border px-3 py-2"
-        >
-          {SORTS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {isLoading && <p>Loading...</p>}
-      {isError && <p className="text-red-600">Could not load the players.</p>}
-
-      <table className="w-full text-left text-sm">
-        <thead>
-          <tr>
-            <th className="p-2">Player</th>
-            <th className="p-2">Status</th>
-            <th className="p-2">Last seen</th>
-            <th className="p-2">Playtime</th>
-            <th className="p-2">Banned</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data?.content.map((p) => (
-            <tr
-              key={p.uuid}
-              className="cursor-pointer border-t hover:bg-gray-50"
-              onClick={() => navigate("/players/" + p.uuid)}
+          <div className="w-full sm:w-44">
+            <label htmlFor="player-status" className="mc-label">
+              Status
+            </label>
+            <select
+              id="player-status"
+              value={online ?? "all"}
+              onChange={(event) =>
+                update({
+                  online:
+                    event.target.value === "all" ? null : event.target.value,
+                  page: "0",
+                })
+              }
+              className="mc-select"
             >
-              <td className="p-2">
-                <div className="flex items-center gap-2">
-                  <PlayerAvatar name={p.name} />
-                  {p.name}
-                </div>
-              </td>
-              <td className="p-2">
-                <span className={p.online ? "text-green-600" : "text-gray-400"}>
-                  {p.online ? "Online" : "Offline"}
-                </span>
-              </td>
-              <td className="p-2">{timeAgo(p.lastSeen)}</td>
-              <td className="p-2">{formatDuration(p.totalPlaytimeSeconds)}</td>
-              <td className="p-2">
-                {p.banned && <span className="text-red-600">Banned</span>}
-              </td>
-            </tr>
-          ))}
-          {data && data.content.length === 0 && (
-            <tr>
-              <td className="p-2 text-gray-500" colSpan={5}>
-                No players match the filters.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+              <option value="all">All players</option>
+              <option value="true">Online</option>
+              <option value="false">Offline</option>
+            </select>
+          </div>
 
-      <div className="flex items-center justify-between">
-        <button
-          className="rounded bg-gray-200 px-4 py-2 disabled:opacity-50"
-          onClick={() => update({ page: String(Math.max(page - 1, 0)) })}
-          disabled={page === 0}
-        >
-          Previous
-        </button>
-        <span>
-          Page {page + 1}
-          {data ? ` of ${Math.max(Math.ceil(data.totalElements / data.size), 1)}` : ""}
-        </span>
-        <button
-          className="rounded bg-gray-200 px-4 py-2 disabled:opacity-50"
-          onClick={() => update({ page: String(page + 1) })}
-          disabled={!hasNext}
-        >
-          Next
-        </button>
-      </div>
+          <div className="w-full sm:w-44">
+            <label htmlFor="player-sort" className="mc-label">
+              Sort by
+            </label>
+            <select
+              id="player-sort"
+              value={sort}
+              onChange={(event) =>
+                update({ sort: event.target.value, page: "0" })
+              }
+              className="mc-select"
+            >
+              {SORTS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <section className="mc-panel">
+        <div className="mc-panel-head">
+          <h2 className="mc-panel-title">Player list</h2>
+          <span className="mc-badge mc-badge-offline">
+            {data ? `${data.totalElements} total` : "Loading"}
+          </span>
+        </div>
+
+        {isLoading && <p className="mc-note">Loading...</p>}
+        {isError && <p className="mc-error">Could not load the players.</p>}
+
+        <div className="mc-table-wrap">
+          <table className="mc-table">
+            <thead>
+              <tr>
+                <th>Player</th>
+                <th>Status</th>
+                <th>Last seen</th>
+                <th>Playtime</th>
+                <th>Banned</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data?.content.map((player) => (
+                <tr
+                  key={player.uuid}
+                  className="mc-row-click"
+                  onClick={() => navigate("/players/" + player.uuid)}
+                >
+                  <td>
+                    <div className="flex items-center gap-2">
+                      <PlayerAvatar name={player.name} size={28} />
+                      <span className="font-semibold text-white">
+                        {player.name}
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    <span
+                      className={
+                        "mc-badge " +
+                        (player.online
+                          ? "mc-badge-online"
+                          : "mc-badge-offline")
+                      }
+                    >
+                      {player.online ? "Online" : "Offline"}
+                    </span>
+                  </td>
+                  <td className="text-mc-muted">{timeAgo(player.lastSeen)}</td>
+                  <td>{formatDuration(player.totalPlaytimeSeconds)}</td>
+                  <td>
+                    {player.banned ? (
+                      <span className="mc-badge mc-badge-danger">Banned</span>
+                    ) : (
+                      <span className="text-mc-muted">-</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {data && data.content.length === 0 && (
+                <tr>
+                  <td colSpan={5}>
+                    <p className="mc-empty">No players match the filters.</p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="mc-pagination">
+          <button
+            type="button"
+            className="mc-btn mc-btn-sm"
+            onClick={() => update({ page: String(Math.max(page - 1, 0)) })}
+            disabled={page === 0}
+          >
+            <ChevronLeft aria-hidden="true" />
+            Previous
+          </button>
+          <span className="mc-page-count">
+            Page {page + 1} of {totalPages}
+          </span>
+          <button
+            type="button"
+            className="mc-btn mc-btn-sm"
+            onClick={() => update({ page: String(page + 1) })}
+            disabled={!hasNext}
+          >
+            Next
+            <ChevronRight aria-hidden="true" />
+          </button>
+        </div>
+      </section>
     </div>
   );
 }
